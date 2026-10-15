@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SinhHai-Studio | Canva-like Image Editor & AI Studio</title>
+    <title>SinhHai-Studio | Canva-like Pro Editor</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Fabric.js CDN cho Canvas Editor -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/531/fabric.min.js"></script>
     <!-- FontAwesome cho Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts cho tùy chọn chữ -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@0,400;1,700&family=Roboto+Mono&display=swap" rel="stylesheet">
 </head>
-<body class="bg-slate-900 text-white h-screen flex flex-col overflow-hidden">
+<body class="bg-slate-900 text-white h-screen flex flex-col overflow-hidden font-['Inter']">
 
     <!-- Top Header Bar -->
     <header class="h-14 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4 z-10">
@@ -19,7 +21,7 @@
             <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-3 py-1 rounded-lg font-bold text-lg flex items-center shadow-md">
                 <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> SinhHai-Studio
             </div>
-            <span class="text-xs bg-slate-700 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">MIT Studio</span>
+            <span class="text-xs bg-slate-700 text-purple-300 px-2 py-0.5 rounded border border-purple-500/30">Pro Canva Engine</span>
         </div>
         <div class="flex items-center space-x-3">
             <button onclick="downloadImage('png')" class="bg-slate-700 hover:bg-slate-600 text-sm px-3 py-1.5 rounded transition flex items-center">
@@ -30,6 +32,34 @@
             </button>
         </div>
     </header>
+
+    <!-- Sub-Toolbar chỉnh sửa đối tượng được chọn -->
+    <div class="bg-slate-850 bg-slate-800/60 border-b border-slate-700/60 px-4 py-2 flex items-center space-x-6 text-sm">
+        <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-400">Màu sắc:</span>
+            <input type="color" id="prop-color" onchange="changeColor(this.value)" class="w-7 h-7 rounded border border-slate-600 cursor-pointer bg-transparent">
+        </div>
+        <div class="flex items-center space-x-2" id="font-family-wrapper">
+            <span class="text-xs text-slate-400">Font chữ:</span>
+            <select id="prop-font" onchange="changeFont(this.value)" class="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-purple-500">
+                <option value="Inter">Inter</option>
+                <option value="Montserrat">Montserrat</option>
+                <option value="Playfair Display">Playfair Display</option>
+                <option value="Roboto Mono">Roboto Mono</option>
+                <option value="Arial">Arial</option>
+            </select>
+        </div>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-400">Thứ tự Layer:</span>
+            <button onclick="bringForward()" title="Đưa lên 1 lớp" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded text-xs"><i class="fa-solid fa-arrow-up"></i></button>
+            <button onclick="sendBackwards()" title="Đưa xuống 1 lớp" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1 rounded text-xs"><i class="fa-solid fa-arrow-down"></i></button>
+        </div>
+        <div class="h-4 w-px bg-slate-700"></div>
+        <button onclick="deleteSelected()" class="bg-red-500/20 hover:bg-red-500/40 text-red-300 px-3 py-1 rounded text-xs transition flex items-center">
+            <i class="fa-solid fa-trash mr-1.5"></i> Xóa đối tượng
+        </button>
+    </div>
 
     <!-- Main Workspace Layout -->
     <div class="flex flex-1 overflow-hidden">
@@ -46,11 +76,11 @@
             <!-- Nội dung Tab: AI SinhHai -->
             <div id="tab-ai" class="p-4 flex-1 overflow-y-auto space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Nhập Prompt tạo ảnh/vector</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Prompt tạo ảnh/vector</label>
                     <textarea id="ai-prompt" rows="3" class="w-full bg-slate-900 border border-slate-700 rounded p-2.5 text-sm focus:outline-none focus:border-purple-500" placeholder="Mô tả ý tưởng hình ảnh, logo, vector của bạn..."></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Kích thước chuẩn (Aspect Ratio)</label>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Tỉ lệ kích thước</label>
                     <select id="ai-ratio" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:outline-none focus:border-purple-500">
                         <option value="1:1">Vuông (1:1 - 1024x1024)</option>
                         <option value="2:3">Dọc (2:3 - 800x1200)</option>
@@ -71,7 +101,7 @@
 
             <!-- Nội dung Tab: Kho Tài Nguyên -->
             <div id="tab-resources" class="p-4 flex-1 overflow-y-auto hidden space-y-3">
-                <p class="text-xs text-slate-400">Chọn chèn nhanh các hình khối & tài nguyên vector miễn phí:</p>
+                <p class="text-xs text-slate-400">Chèn hình khối & vector miễn phí:</p>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="addShape('rect')" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-xs flex flex-col items-center"><i class="fa-regular fa-square text-lg mb-1 text-purple-400"></i> Hình Chữ Nhật</button>
                     <button onclick="addShape('circle')" class="bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-xs flex flex-col items-center"><i class="fa-regular fa-circle text-lg mb-1 text-indigo-400"></i> Hình Tròn</button>
@@ -82,10 +112,10 @@
 
             <!-- Nội dung Tab: Chữ & Text -->
             <div id="tab-text" class="p-4 flex-1 overflow-y-auto hidden space-y-3">
-                <button onclick="addText('Tiêu đề chính', 28, true)" class="w-full bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-sm font-bold text-left flex items-center justify-between">
+                <button onclick="addText('Tiêu đề chính', 32, true)" class="w-full bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-sm font-bold text-left flex items-center justify-between">
                     <span>Thêm Tiêu Đề Lớn</span> <i class="fa-solid fa-plus text-xs"></i>
                 </button>
-                <button onclick="addText('Đoạn văn bản nội dung...', 16, false)" class="w-full bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-sm text-left flex items-center justify-between">
+                <button onclick="addText('Nội dung đoạn văn bản...', 16, false)" class="w-full bg-slate-900 hover:bg-slate-700 border border-slate-700 p-3 rounded text-sm text-left flex items-center justify-between">
                     <span>Thêm Đoạn Văn Bản</span> <i class="fa-solid fa-plus text-xs"></i>
                 </button>
             </div>
@@ -99,20 +129,19 @@
         </main>
     </div>
 
-    <!-- JavaScript xử lý Canvas & Giao diện -->
+    <!-- JavaScript xử lý Canvas nâng cao -->
     <script>
-        // Khởi tạo Fabric Canvas
         const canvas = new fabric.Canvas('canvas', {
             backgroundColor: '#ffffff'
         });
 
-        // Thêm mặc định một chữ chào mừng
+        // Thêm text mặc định
         const text = new fabric.Textbox('Chào mừng đến với SinhHai-Studio', {
-            left: 200,
+            left: 180,
             top: 250,
-            fontSize: 24,
+            fontSize: 26,
             fill: '#4f46e5',
-            fontFamily: 'Arial'
+            fontFamily: 'Inter'
         });
         canvas.add(text);
         canvas.setActiveObject(text);
@@ -133,28 +162,28 @@
 
         // Thêm hình khối
         function addShape(type) {
+            let obj;
             if (type === 'rect') {
-                const rect = new fabric.Rect({ left: 100, top: 100, fill: '#818cf8', width: 120, height: 80, rx: 5, ry: 5 });
-                canvas.add(rect);
-                canvas.setActiveObject(rect);
+                obj = new fabric.Rect({ left: 100, top: 100, fill: '#818cf8', width: 140, height: 90, rx: 6, ry: 6 });
             } else if (type === 'circle') {
-                const circle = new fabric.Circle({ left: 150, top: 150, fill: '#f472b6', radius: 50 });
-                canvas.add(circle);
-                canvas.setActiveObject(circle);
+                obj = new fabric.Circle({ left: 150, top: 150, fill: '#f472b6', radius: 55 });
             } else if (type === 'triangle') {
-                const triangle = new fabric.Triangle({ left: 200, top: 150, fill: '#34d399', width: 90, height: 90 });
-                canvas.add(triangle);
-                canvas.setActiveObject(triangle);
+                obj = new fabric.Triangle({ left: 200, top: 150, fill: '#34d399', width: 100, height: 100 });
+            }
+            if (obj) {
+                canvas.add(obj);
+                canvas.setActiveObject(obj);
             }
         }
 
         function addText(content, size, isBold) {
             const txt = new fabric.Textbox(content, {
-                left: 250,
+                left: 220,
                 top: 250,
                 fontSize: size,
                 fontWeight: isBold ? 'bold' : 'normal',
-                fill: '#1e293b'
+                fill: '#1e293b',
+                fontFamily: 'Inter'
             });
             canvas.add(txt);
             canvas.setActiveObject(txt);
@@ -162,14 +191,63 @@
 
         function addSampleImage() {
             fabric.Image.fromURL('https://picsum.photos/400/300', function(img) {
-                img.scaleToWidth(250);
+                img.scaleToWidth(260);
                 canvas.add(img);
                 canvas.centerObject(img);
                 canvas.setActiveObject(img);
             }, { crossOrigin: 'anonymous' });
         }
 
-        // Gọi API AI SinhHai (Endpoint mẫu chuẩn kết nối sinhhai.com)
+        // --- CÁC TÍNH NĂNG CHỈNH SỬA NÂNG CAO (Toolbar) ---
+
+        // Đổi màu đối tượng đang chọn
+        function changeColor(color) {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                if (activeObj.set) {
+                    activeObj.set('fill', color);
+                    canvas.renderAll();
+                }
+            }
+        }
+
+        // Đổi font chữ (nếu là Textbox/Text)
+        function changeFont(fontName) {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj && (activeObj.type === 'textbox' || activeObj.type === 'text')) {
+                activeObj.set('fontFamily', fontName);
+                canvas.renderAll();
+            }
+        }
+
+        // Quản lý Layer (Thứ tự lớp)
+        function bringForward() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                canvas.bringForward(activeObj);
+                canvas.renderAll();
+            }
+        }
+
+        function sendBackwards() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                canvas.sendBackwards(activeObj);
+                canvas.renderAll();
+            }
+        }
+
+        // Xóa đối tượng
+        function deleteSelected() {
+            const activeObj = canvas.getActiveObject();
+            if (activeObj) {
+                canvas.remove(activeObj);
+                canvas.discardActiveObject();
+                canvas.renderAll();
+            }
+        }
+
+        // Gọi API AI SinhHai
         async function generateAIImage() {
             const prompt = document.getElementById('ai-prompt').value;
             const ratio = document.getElementById('ai-ratio').value;
@@ -180,10 +258,9 @@
 
             alert(`Đang gửi yêu cầu tạo ảnh đến API SinhHai (sinhhai.com) với prompt: "${prompt}" (Tỉ lệ: ${ratio})...`);
             
-            // Giả lập kết quả trả về từ API AI SinhHai và chèn trực tiếp lên Canvas
             setTimeout(() => {
                 fabric.Image.fromURL('https://picsum.photos/500/500', function(img) {
-                    img.scaleToWidth(300);
+                    img.scaleToWidth(320);
                     canvas.add(img);
                     canvas.centerObject(img);
                     canvas.setActiveObject(img);
@@ -192,7 +269,7 @@
             }, 1000);
         }
 
-        // Xuất file
+        // Xuất file đa định dạng
         function downloadImage(format) {
             if (format === 'png') {
                 const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
